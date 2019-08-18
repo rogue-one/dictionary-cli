@@ -1,7 +1,6 @@
 package org.chlr.rogue1.dictionary
 
 import org.scalacheck.Gen
-import org.scalacheck.Prop.BooleanOperators
 
 
 class TrieDictionarySpec extends TestSpec {
@@ -11,9 +10,9 @@ class TrieDictionarySpec extends TestSpec {
     val dictionary = new TrieDictionary(new RootNode)
     forAll {
       (word: String, desc: String) => {
-        (word.length > 0 && desc.length > 0) ==> {
+        whenever(word.length > 0 && desc.length > 0) {
           val result = dictionary.addWord(word, desc)
-          (!result || dictionary.retrieve(word).contains(desc))
+          (!result || dictionary.retrieve(word).contains(desc)) mustBe true
         }
       }
     }
@@ -21,15 +20,18 @@ class TrieDictionarySpec extends TestSpec {
 
   it must "query word matching prefixes" in {
     val dictionary = new TrieDictionary(new RootNode)
-    val customGen = for {
-      prefix <- Gen.asciiPrintableStr
-      list <- Gen.nonEmptyContainerOf[List, String](Gen.asciiPrintableStr.suchThat(_.length > 3))
-    } yield (prefix, list.map(x => s"$prefix$x"))
+
+    def genWordSize(size: Int): Gen[String] = Gen.listOfN(size, Gen.alphaChar).map(_.mkString)
+
+    val customGen = genWordSize(3)
+      .flatMap(prefix => Gen.listOfN(6, genWordSize(10)).map(x => prefix -> x.map(prefix.concat)))
+      .suchThat({ case (prefix, words) => words.forall(_.length > 0) })
     forAll(customGen) {
       case (prefix: String, words: List[String]) =>
         words.foreach(dictionary.addWord(_, ""))
-        dictionary.query(prefix) == words
+        dictionary.query(prefix) must contain only (words.map(_.substring(3)): _*)
     }
   }
+
 
 }

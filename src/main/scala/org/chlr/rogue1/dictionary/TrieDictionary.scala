@@ -14,8 +14,8 @@ class TrieDictionary(val rootNode: RootNode) {
   }
 
   def query(prefix: String): List[String] = {
-    rootNode.fetch(prefix.toList, Nil) match {
-      case Some(x) => x.queryPrefix
+    rootNode.fetch(prefix.toList, Nil)  match {
+      case Some(x) => x.children.values.flatMap(_.queryPrefix).toList
       case None => Nil
     }
   }

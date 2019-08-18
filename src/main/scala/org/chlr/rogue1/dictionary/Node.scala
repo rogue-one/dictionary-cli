@@ -38,7 +38,7 @@ sealed trait Node  {
   }
 
   def queryPrefix: List[String] = {
-    this.walk(Nil).map(_.collect({ case x: BaseNode => x.value}).mkString(""))
+    this.walk(Nil).map(_.collect({ case x: BaseNode => x.value}).reverse.mkString(""))
   }
 
 }
